@@ -99,7 +99,7 @@ export default function Success() {
           <p className="text-sm text-gray-700">
             Your loan is now being processed. You will receive confirmation within{" "}
             <span className="font-bold text-green-600">
-              3 business days
+              4 business days
             </span>.
           </p>
         </div>
