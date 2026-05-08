@@ -1,25 +1,32 @@
 import { kv } from "@vercel/kv";
 
+const allowCors = (res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+};
+
 export default async function handler(req, res) {
+  allowCors(res);
+
+  // ✅ Handle preflight request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
-    return res.status(405).json({
-      success: false,
-      message: "Method not allowed",
-    });
+    return res.status(405).json({ success: false, message: "Method not allowed" });
   }
 
   try {
     const { phone_number, amount, reference, customer_name } = req.body;
 
-    // 🔥 REAL PAYHERO API
     const response = await fetch(
       "https://backend.payhero.co.ke/api/v2/payments",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-
-          // ⚠️ MUST be Basic auth (NOT Bearer)
           Authorization: `Basic ${process.env.PAYHERO_TOKEN}`,
         },
         body: JSON.stringify({
@@ -36,7 +43,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // store pending status
     await kv.set(reference, "PENDING");
 
     return res.status(200).json({
@@ -44,8 +50,9 @@ export default async function handler(req, res) {
       reference,
       data,
     });
+
   } catch (error) {
-    console.error("PayHero Error:", error);
+    console.error(error);
 
     return res.status(500).json({
       success: false,
