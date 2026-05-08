@@ -1,21 +1,25 @@
 import { kv } from "@vercel/kv";
 
-const allowCors = (res) => {
+const setCors = (res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 };
 
 export default async function handler(req, res) {
-  allowCors(res);
+  setCors(res);
 
-  // ✅ Handle preflight request
+  // ✅ MUST handle preflight FIRST
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method not allowed" });
+    setCors(res);
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed",
+    });
   }
 
   try {
@@ -45,6 +49,7 @@ export default async function handler(req, res) {
 
     await kv.set(reference, "PENDING");
 
+    setCors(res);
     return res.status(200).json({
       success: true,
       reference,
@@ -52,8 +57,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(error);
-
+    setCors(res);
     return res.status(500).json({
       success: false,
       message: error.message,
