@@ -98,7 +98,7 @@ export default function Payment() {
           clearInterval(interval);
 
           Swal.fire({
-            title: "Payment Successful!",
+            title: "Payment Successful",
             text: "Your loan has been activated",
             icon: "success",
             timer: 2000,
