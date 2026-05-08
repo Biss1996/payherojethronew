@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "",
+  baseURL: "https://timizamkopo-ke.vercel.app",
   headers: {
     "Content-Type": "application/json",
   },

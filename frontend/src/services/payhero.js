@@ -1,11 +1,17 @@
 import API from "../api";
 
-export const initiateSTKPush = async (phone, amount, reference) => {
+export const initiateSTKPush = async ({
+  phone_number,
+  amount,
+  reference,
+  customer_name,
+}) => {
   try {
     const res = await API.post("/api/payhero-payment", {
-      phone,
+      phone_number,
       amount,
       reference: reference || `LOAN-${Date.now()}`,
+      customer_name: customer_name || "Customer",
     });
 
     return res.data;

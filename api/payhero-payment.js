@@ -2,29 +2,41 @@ import { kv } from "@vercel/kv";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method not allowed" });
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed",
+    });
   }
 
   try {
-    const { phone, amount, reference } = req.body;
+    const { phone_number, amount, reference, customer_name } = req.body;
 
-    // 1. Call PayHero API
-    const response = await fetch("https://PAYHERO_API_ENDPOINT", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.PAYHERO_TOKEN}`,
-      },
-      body: JSON.stringify({
-        phone,
-        amount,
-        reference,
-      }),
-    });
+    // 🔥 REAL PAYHERO API
+    const response = await fetch(
+      "https://backend.payhero.co.ke/api/v2/payments",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+
+          // ⚠️ MUST be Basic auth (NOT Bearer)
+          Authorization: `Basic ${process.env.PAYHERO_TOKEN}`,
+        },
+        body: JSON.stringify({
+          amount,
+          phone_number,
+          channel_id: 133,
+          provider: "m-pesa",
+          external_reference: reference,
+          customer_name: customer_name || "Customer",
+          callback_url: `${process.env.BASE_URL}/api/payhero-webhook`,
+        }),
+      }
+    );
 
     const data = await response.json();
 
-    // 2. Store pending status in KV
+    // store pending status
     await kv.set(reference, "PENDING");
 
     return res.status(200).json({
@@ -33,7 +45,7 @@ export default async function handler(req, res) {
       data,
     });
   } catch (error) {
-    console.error(error);
+    console.error("PayHero Error:", error);
 
     return res.status(500).json({
       success: false,
