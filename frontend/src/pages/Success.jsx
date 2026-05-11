@@ -1,113 +1,90 @@
-import { useEffect, useRef, useState } from "react";
-import Swal from "sweetalert2";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Loader from "../components/Loader";
 
 export default function Success() {
-  const alertShown = useRef(false);
-  const [verified, setVerified] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      const reference = sessionStorage.getItem("external_reference");
+    const paymentStatus =
+      sessionStorage.getItem("payment_status");
 
-      if (!reference) {
-        navigate("/apply", { replace: true });
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/check-payment?reference=${reference}`);
-        const data = await res.json();
-
-        if (data.status !== "SUCCESS") {
-          // ❌ Not paid → block access
-          navigate("/payment", { replace: true });
-          return;
-        }
-
-        // ✅ Payment verified
-        setVerified(true);
-
-        if (!alertShown.current) {
-          alertShown.current = true;
-
-          Swal.fire({
-            title: "Payment Successful ✅",
-            html: `
-              <div style="text-align:center">
-                <p>Your activation fee has been received successfully.</p>
-                <br/>
-                <strong>Your loan is now being processed.</strong>
-                <br/><br/>
-                You will receive confirmation within 
-                <span style="color:#10b981">3 business days</span>.
-                <br/><br/>
-                Please keep your phone active for updates.
-              </div>
-            `,
-            icon: "success",
-            confirmButtonColor: "#10b981",
-            confirmButtonText: "Got it",
-          });
-        }
-      } catch (err) {
-        console.log(err);
-        navigate("/payment", { replace: true });
-      }
-    };
-
-    verifyPayment();
+    if (paymentStatus !== "SUCCESS") {
+      navigate("/", { replace: true });
+    }
   }, [navigate]);
 
-  // ⏳ While verifying
-  if (!verified) return <Loader />;
+  const loanData = JSON.parse(
+    sessionStorage.getItem("myLoan") || "{}"
+  );
+
+  const paymentReference =
+    sessionStorage.getItem("payment_reference");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-sky-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
-        
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-pulse">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-100 flex items-center justify-center px-4">
+
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+
+        {/* TOP */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-center text-white">
+
+          <div className="w-24 h-24 bg-white/20 rounded-full mx-auto flex items-center justify-center text-5xl">
+            🎉
           </div>
-        </div>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Payment Confirmed
-        </h1>
+          <h1 className="text-3xl font-black mt-4">
+            Payment Successful
+          </h1>
 
-        <p className="text-gray-600 mb-6">
-          Your activation fee has been received successfully.
-        </p>
-
-        <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-6">
-          <p className="text-sm text-gray-700">
-            Your loan is now being processed. You will receive confirmation within{" "}
-            <span className="font-bold text-green-600">
-              4 business days
-            </span>.
+          <p className="text-sm opacity-90 mt-2">
+            Your loan activation was completed
           </p>
         </div>
 
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>📱 Keep your phone active for updates</p>
-          <p>🔒 All applications are securely reviewed</p>
-          <p>⚡ No additional application needed</p>
+        {/* BODY */}
+        <div className="p-6 space-y-5">
+
+          {/* LOAN */}
+          <div className="bg-gray-50 rounded-2xl p-5 text-center border">
+
+            <p className="text-sm text-gray-500">
+              Activated Loan Amount
+            </p>
+
+            <h2 className="text-4xl font-black text-gray-900 mt-2">
+              KES{" "}
+              {loanData.loan_amount?.toLocaleString()}
+            </h2>
+          </div>
+
+          {/* REFERENCE */}
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+
+            <p className="text-sm text-gray-500">
+              Payment Reference
+            </p>
+
+            <p className="font-semibold text-gray-900 break-all">
+              {paymentReference}
+            </p>
+          </div>
+
+          {/* STATUS */}
+          <div className="bg-green-50 border border-green-100 rounded-2xl p-4 text-center">
+
+            <p className="text-green-700 font-semibold">
+              Your activation payment has been
+              confirmed successfully.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => navigate("/")}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold shadow-lg hover:scale-[1.02] transition-all"
+          >
+            Back to Home
+          </button>
         </div>
       </div>
     </div>
